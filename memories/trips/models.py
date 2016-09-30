@@ -9,7 +9,7 @@ from geoposition.fields import GeopositionField
 @python_2_unicode_compatible
 class Location(models.Model):
     name = models.CharField(max_length=30)
-    postion = GeopositionField()
+    position = GeopositionField()
 
     def __str__(self):
         return self.name
