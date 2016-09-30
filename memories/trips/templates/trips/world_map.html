@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>World Map</title>
+        <meta name="viewport" content="initial-scale=1.0">
+        <meta charset="utf-8">
+        <style>
+            html, body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            #map {
+                height: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA27Csv362mBdCLrbDy8_Y07hfDiG-KyF8"></script>
+        <script type="text/javascript" src="https://cdn.rawgit.com/googlemaps/v3-utility-library/master/infobox/src/infobox.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/js-marker-clusterer/1.0.0/markerclusterer.js"></script>
+        <script type="text/javascript">
+
+            // https://snazzymaps.com/
+            var style_normal = [{"featureType":"landscape","stylers":[{"saturation":-7},{"gamma":1.02},{"hue":"#ffc300"},{"lightness":-10}]},{"featureType":"road.highway","stylers":[{"hue":"#ffaa00"},{"saturation":-45},{"gamma":1},{"lightness":-4}]},{"featureType":"road.arterial","stylers":[{"hue":"#ffaa00"},{"lightness":-10},{"saturation":64},{"gamma":0.9}]},{"featureType":"road.local","stylers":[{"lightness":-5},{"hue":"#00f6ff"},{"saturation":-40},{"gamma":0.75}]},{"featureType":"poi","stylers":[{"saturation":-30},{"lightness":11},{"gamma":0.5},{"hue":"#ff8000"}]},{"featureType":"water","stylers":[{"hue":"#0077ff"},{"gamma":1.25},{"saturation":-22},{"lightness":-31}]}];
+            var style_zoomed = [{"featureType":"water","stylers":[{"color":"#19a0d8"}]},{"featureType":"administrative","elementType":"labels.text.stroke","stylers":[{"color":"#ffffff"},{"weight":6}]},{"featureType":"administrative","elementType":"labels.text.fill","stylers":[{"color":"#e85113"}]},{"featureType":"road.highway","elementType":"geometry.stroke","stylers":[{"color":"#efe9e4"},{"lightness":-40}]},{"featureType":"road.arterial","elementType":"geometry.stroke","stylers":[{"color":"#efe9e4"},{"lightness":-20}]},{"featureType":"road","elementType":"labels.text.stroke","stylers":[{"lightness":100}]},{"featureType":"road","elementType":"labels.text.fill","stylers":[{"lightness":-100}]},{"featureType":"road.highway","elementType":"labels.icon"},{"featureType":"landscape","elementType":"labels","stylers":[{"visibility":"off"}]},{"featureType":"landscape","stylers":[{"lightness":20},{"color":"#efe9e4"}]},{"featureType":"landscape.man_made","stylers":[{"visibility":"off"}]},{"featureType":"water","elementType":"labels.text.stroke","stylers":[{"lightness":100}]},{"featureType":"water","elementType":"labels.text.fill","stylers":[{"lightness":-100}]},{"featureType":"poi","elementType":"labels.text.fill","stylers":[{"hue":"#11ff00"}]},{"featureType":"poi","elementType":"labels.text.stroke","stylers":[{"lightness":100}]},{"featureType":"poi","elementType":"labels.icon","stylers":[{"hue":"#4cff00"},{"saturation":58}]},{"featureType":"poi","elementType":"geometry","stylers":[{"visibility":"on"},{"color":"#f0e4d3"}]},{"featureType":"road.highway","elementType":"geometry.fill","stylers":[{"color":"#efe9e4"},{"lightness":-25}]},{"featureType":"road.arterial","elementType":"geometry.fill","stylers":[{"color":"#efe9e4"},{"lightness":-10}]},{"featureType":"poi","elementType":"labels","stylers":[{"visibility":"simplified"}]}];
+            var styled_normal = new google.maps.StyledMapType(style_normal, {name: "style normal"});
+            var styled_zoomed = new google.maps.StyledMapType(style_zoomed, {name: "style zoomed"});
+
+            google.maps.event.addDomListener(window, 'load', initMap);
+
+            var map;
+            var markers = [];
+            function initMap() {
+
+                var center_pos = new google.maps.LatLng(36.456, 138.295);
+                map = new google.maps.Map(document.getElementById('map'), {
+                    center: center_pos,
+                    zoom: 5,
+                    maxZoom: 12,
+                    panControl: false,
+                    mapTypeControl: false,
+                    mapTypeControlOptions: {
+                        mapTypeIds: ['map_styles_normal', 'map_styles_zoomed']
+                    }
+                });
+                map.mapTypes.set('map_styles_normal', styled_normal);
+                map.mapTypes.set('map_styles_zoomed', styled_zoomed);
+                map.setMapTypeId('map_styles_normal');
+
+                google.maps.event.addListener(map, "zoom_changed", function() {
+                    var newZoom = map.getZoom();
+                    if (newZoom > 6) {
+                        map.setMapTypeId('map_styles_zoomed');
+                    } else {
+                        map.setMapTypeId('map_styles_normal');
+                    }
+                });
+
+                setMarkers(map);
+                var options = {
+                    // will auto add '1.png' to the given url...
+                    imagePath: '/static/trips/images/m',
+                };
+                var markerCluster = new MarkerClusterer(map, markers, options);
+
+            }
+
+            function setMarkers(map) {
+                var icon = {
+                    url: '/static/trips/images/background.png',
+                    scaledSize: new google.maps.Size(30, 30),
+                    origin: new google.maps.Point(0, 0),
+                    anchor: new google.maps.Point(0, 30)
+                };
+                var pos;
+
+                var pop_up_info = "border: 0px solid black; background-color: #ffffff; padding:15px; margin-top: 8px; border-radius:10px; -moz-border-radius: 10px; -webkit-border-radius: 10px; box-shadow: 1px 1px #888;";
+                var boxText = document.createElement("div");
+                boxText.style.cssText = pop_up_info;
+                boxText.innerHTML = '<span class="pop_up_box_text"><img src="/static/trips/images/background.png" width="400" height="285" border="0" /></span>';
+                var infoboxOptions = {
+                    content: boxText,
+                    disableAutoPan: false,
+                    maxWidth: 0,
+                    pixelOffset: new google.maps.Size(-241, 0),
+                    zIndex: null,
+                    boxStyle: {
+                        //background: "url('infobox/pop_up_box_top_arrow.png') no-repeat",
+                        opacity: 1,
+                        width: "430px"
+                    },
+                    closeBoxMargin: "10px 2px 2px 2px",
+                    closeBoxURL: "http://www.google.com/intl/en_us/mapfiles/close.gif",
+                    infoBoxClearance: new google.maps.Size(1, 1),
+                    isHidden: false,
+                    pane: "floatPane",
+                    enableEventPropagation: false
+                };
+                var infobox = new InfoBox(infoboxOptions);
+
+                {% for location in locations %}
+                pos = {
+                    lat: {{ location.position.latitude }},
+                    lng: {{ location.position.longitude }}
+                };
+                var marker = new google.maps.Marker({
+                    map: map,
+                    position: pos,
+                    //icon: icon,
+                });
+
+                google.maps.event.addListener(marker, "click", function (e) {
+                    infobox.open(map, this);
+                    setZoomWhenMarkerClicked();
+                    map.setCenter(this.getPosition());
+                });
+
+                markers.push(marker);
+                {% endfor %}
+            }
+
+            function setZoomWhenMarkerClicked(){
+                var currentZoom = map.getZoom();
+                if (currentZoom < 7) {
+                    map.setZoom(7);
+                }
+}
+        </script>
+    </body>
+</html>
