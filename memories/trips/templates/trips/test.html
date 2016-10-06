@@ -1,96 +1,78 @@
-{{ result }}
-
-
 <!DOCTYPE html>
 <html>
 <head>
-<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
-<script type="text/javascript" src="http://google-maps-utility-library-v3.googlecode.com/svn/trunk/infobox/src/infobox.js"></script>
-<script type="text/javascript">
-function initialize() {
-    var secheltLoc = new google.maps.LatLng(49.47216, -123.76307),
-         markers,
-            myMapOptions = {
-             zoom: 13,
-            center: secheltLoc,
-            mapTypeId: google.maps.MapTypeId.ROADMAP
-        },
-        map = new google.maps.Map(document.getElementById("map_canvas"), myMapOptions);
-
-    function initMarkers(map, markerData) {
-        var newMarkers = [],
-            marker;
-
-        for(var i=0; i<markerData.length; i++) {
-            marker = new google.maps.Marker({
-                map: map,
-                draggable: true,
-                position: markerData[i].latLng,
-                visible: true
-            }),
-            boxText = document.createElement("div"),
-            //these are the options for all infoboxes
-            infoboxOptions = {
-                 content: boxText,
-                disableAutoPan: false,
-                maxWidth: 0,
-                pixelOffset: new google.maps.Size(-140, 0),
-                zIndex: null,
-                boxStyle: {
-                    background: "url('http://google-maps-utility-library-v3.googlecode.com/svn/trunk/infobox/examples/tipbox.gif') no-repeat",
-                    opacity: 0.75,
-                    width: "280px"
-                },
-                closeBoxMargin: "12px 4px 2px 2px",
-                closeBoxURL: "http://www.google.com/intl/en_us/mapfiles/close.gif",
-                infoBoxClearance: new google.maps.Size(1, 1),
-                isHidden: false,
-                pane: "floatPane",
-                enableEventPropagation: false
-            };
-
-            newMarkers.push(marker);
-            //define the text and style for all infoboxes
-            boxText.style.cssText = "border: 1px solid black; margin-top: 8px; background:#333; color:#FFF; font-family:Arial; font-size:12px; padding: 5px; border-radius:6px; -webkit-border-radius:6px; -moz-border-radius:6px;";
-            boxText.innerHTML = markerData[i].address + "<br>" + markerData[i].state;
-            //Define the infobox
-            newMarkers[i].infobox = new InfoBox(infoboxOptions);
-            //Open box when page is loaded
-            newMarkers[i].infobox.open(map, marker);
-            //Add event listen, so infobox for marker is opened when user clicks on it.  Notice the return inside the anonymous function - this creates
-            //a closure, thereby saving the state of the loop variable i for the new marker.  If we did not return the value from the inner function,
-            //the variable i in the anonymous function would always refer to the last i used, i.e., the last infobox. This pattern (or something that
-            //serves the same purpose) is often needed when setting function callbacks inside a for-loop.
-            google.maps.event.addListener(marker, 'click', (function(marker, i) {
-                return function() {
-                    newMarkers[i].infobox.open(map, this);
-                    map.panTo(markerData[i].latLng);
-                }
-            })(marker, i));
-        }
-
-        return newMarkers;
-    }
-
-    //here the call to initMarkers() is made with the necessary data for each marker.  All markers are then returned as an array into the markers variable
-    markers = initMarkers(map, [
-        { latLng: new google.maps.LatLng(49.47216, -123.76307), address: "Address 1", state: "State 1" },
-        { latLng: new google.maps.LatLng(49.47420, -123.75703), address: "Address 2", state: "State 2" },
-        { latLng: new google.maps.LatLng(49.47530, -123.78040), address: "Address 3", state: "State 3" }
-    ]);
-}
-</script>
-<title>Creating and Using an InfoBox</title>
+    <meta charset='utf-8' />
+    <title></title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.25.1/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.25.1/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
 </head>
-<body onload="initialize()" style="padding:1em">
-<div id="map_canvas" style="width: 100%;-webkit-border-radius: 5px;-moz-border-radius: 5px;border-radius: 5px; height: 300px;border:1px solid #666;margin-bottom:1em;box-shadow: 0px 0px 10px #333;"></div>
-<p> This example shows the use of an InfoBox as a replacement for an InfoWindow.
-<script type="text/javascript">
-$(function() {
-    if($.browser.msie) {
-        $("<div/>", {html:"<br>Download Firefox <a href='http://www.mozilla.org/de/firefox/new/'>here</a>.", target:"_blank"}).appendTo("body");
-    }
+<body>
+
+<style>
+
+.marker {
+    background-size: cover;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.mapboxgl-popup {
+    //max-width: 500px;
+}
+
+</style>
+
+<div id='map'></div>
+
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoiYXBvbGxvY2FybG9zIiwiYSI6ImNpdG1mdjRxdDAxYm0ybm4wdzM5eDNlYTIifQ.rskIBBZrZXxIDSCJ5Zq8pg';
+
+var map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v9',
+    center: [138.295, 36.456],
+    zoom: 5,
+    pitch: 70
 });
+map.addControl(new mapboxgl.Navigation());
+
+{% for photo in photo_set %}
+// create the popup
+popupContent = '<img src="{{ photo.file_path }}" width="200" height="200" border="0" />';
+var popup = new mapboxgl.Popup({
+        offset: [25, -10],
+        //closeButton: false,
+        closeOnClick: true})
+    .setHTML(popupContent);
+
+// create DOM element for the marker
+var el = document.createElement('div');
+el.className = 'marker';
+el.style.backgroundImage = 'url({{ photo.file_path }})';
+
+// create the marker
+var marker = new mapboxgl.Marker(el, {offset:[0, 0]})
+    .setLngLat([{{photo.lat_lng.longitude}}, {{ photo.lat_lng.latitude}}])
+    .setPopup(popup)
+    .addTo(map);
+
+el.addEventListener("click", function(e){
+    map.flyTo({
+        center: [{{photo.lat_lng.longitude}}, {{ photo.lat_lng.latitude}}],
+        zoom: 10
+    });
+});
+
+
+{% endfor %}
 </script>
+
 </body>
 </html>

@@ -20,13 +20,21 @@ DATA_PATH_BASE = '/static/trips/data'
 
 
 def test(request):
-    path_base_relative = '/static/trips/data'
-    path_base_real = getcwd() + '/trips' + path_base_relative
-    temp = []
-    for (dirpath, dirnames, filenames) in walk(path_base_real):
-        temp.extend(filenames)
-    files = ['{}/{}'.format(path_base_relative, filename) for filename in temp]
-    return render(request, 'trips/test.html', {'result': files})
+    """
+    img = Image.open("/Users/jp21327/temp/mine/our-memories/memories/trips/static/trips/data/z1.JPG")
+    exif_raw = img.info['exif']
+    exif = get_exif_data(img)
+    if exif["Orientation"] == 3:
+        img = img.rotate(180, expand=True)
+    elif exif["Orientation"] == 6:
+        img = img.rotate(270, expand=True)
+    elif exif["Orientation"] == 8:
+        img = img.rotate(90, expand=True)
+    img.save("/Users/jp21327/temp/mine/our-memories/memories/trips/static/trips/data/z8.JPG")
+    """
+
+    photo_set = Photo.objects.all()
+    return render(request, 'trips/test.html', {'photo_set': photo_set})
 
 
 def world_map(request):
