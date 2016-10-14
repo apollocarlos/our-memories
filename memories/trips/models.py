@@ -22,6 +22,8 @@ class Photo(models.Model):
     lat_lng = GeopositionField()
     file_path = models.CharField(max_length=200)
     file_path_real = models.CharField(max_length=240)
+    width = models.IntegerField()
+    height = models.IntegerField()
     date_time = models.DateTimeField()
 
     def __str__(self):

@@ -7,6 +7,7 @@ from geopy.geocoders import Nominatim
 from os import walk, getcwd
 import datetime
 import random
+import piexif
 
 from .models import Location, Photo
 
@@ -20,21 +21,9 @@ DATA_PATH_BASE = '/static/trips/data'
 
 
 def test(request):
-    """
-    img = Image.open("/Users/jp21327/temp/mine/our-memories/memories/trips/static/trips/data/z1.JPG")
-    exif_raw = img.info['exif']
-    exif = get_exif_data(img)
-    if exif["Orientation"] == 3:
-        img = img.rotate(180, expand=True)
-    elif exif["Orientation"] == 6:
-        img = img.rotate(270, expand=True)
-    elif exif["Orientation"] == 8:
-        img = img.rotate(90, expand=True)
-    img.save("/Users/jp21327/temp/mine/our-memories/memories/trips/static/trips/data/z8.JPG")
-    """
-
     photo_set = Photo.objects.all()
-    return render(request, 'trips/test.html', {'photo_set': photo_set})
+    return render(request, 'trips/world_map_v2.html', {'photo_set': photo_set})
+    #return render(request, 'trips/testdata.html', {'ww': width, 'hh': height})
 
 
 def world_map(request):
@@ -71,6 +60,17 @@ def photo_add(request):
         state = address['state'] if 'state' in address else DEFAULT_STATE
         city = address['city'] if 'city' in address else DEFAULT_CITY
 
+        exif_dict = piexif.load(img.info["exif"])
+        if exif_dict["0th"][piexif.ImageIFD.Orientation] == 3:
+            img = img.rotate(180, expand=True)
+        elif exif_dict["0th"][piexif.ImageIFD.Orientation] == 6:
+            img = img.rotate(270, expand=True)
+        elif exif_dict["0th"][piexif.ImageIFD.Orientation] == 8:
+            img = img.rotate(90, expand=True)
+        width, height = img.size
+        exif_bytes = piexif.dump(exif_dict)
+        img.save(path_real, exif=exif_bytes)
+
         loc, res_loc = Location.objects.get_or_create(
             country=country,
             state=state,
@@ -81,6 +81,8 @@ def photo_add(request):
             lat_lng=Geoposition(lat_lng[0], lat_lng[1]),
             file_path=path,
             file_path_real=path_real,
+            width=width,
+            height=height,
             date_time=datetime_fixed
         )
 
