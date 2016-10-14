@@ -45,9 +45,9 @@ map.addControl(new mapboxgl.Navigation());
 
 {% for photo in photo_set %}
 // create the popup
-popupContent = '<img src="{{ photo.file_path }}" width="200" height="200" border="0" />';
+popupContent = '<img src="{{ photo.file_path }}" width="{% widthratio photo.width 10 1 %}" height="{% widthratio photo.height 10 1 %}" border="0" />';
 var popup = new mapboxgl.Popup({
-        offset: [25, -10],
+        offset: [25, 15],
         //closeButton: false,
         closeOnClick: true})
     .setHTML(popupContent);

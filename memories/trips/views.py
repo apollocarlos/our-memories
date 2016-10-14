@@ -23,7 +23,7 @@ DATA_PATH_BASE = '/static/trips/data'
 def test(request):
     photo_set = Photo.objects.all()
     return render(request, 'trips/world_map_v2.html', {'photo_set': photo_set})
-    #return render(request, 'trips/testdata.html', {'ww': width, 'hh': height})
+    #return render(request, 'trips/testdata.html', {'ww': 100, 'hh': 100})
 
 
 def world_map(request):
